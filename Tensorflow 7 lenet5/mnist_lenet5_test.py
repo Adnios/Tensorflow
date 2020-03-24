@@ -1,4 +1,3 @@
-#coding:utf-8
 import time
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
@@ -8,7 +7,7 @@ import numpy as np
 
 TEST_INTERVAL_SECS = 5
 
-#´´½¨Ò»¸öÄ¬ÈÏÍ¼£¬ÔÚ¸ÃÍ¼ÖĞÖ´ĞĞÒÔÏÂ²Ù×÷
+#åˆ›å»ºä¸€ä¸ªé»˜è®¤å›¾ï¼Œåœ¨è¯¥å›¾ä¸­æ‰§è¡Œä»¥ä¸‹æ“ä½œ
 def test(mnist):
     with tf.Graph().as_default() as g: 
         x = tf.placeholder(tf.float32,[
@@ -17,16 +16,16 @@ def test(mnist):
             mnist_lenet5_forward.IMAGE_SIZE,
             mnist_lenet5_forward.NUM_CHANNELS]) 
         y_ = tf.placeholder(tf.float32, [None, mnist_lenet5_forward.OUTPUT_NODE])
-		#ÑµÁ·ºÃµÄÍøÂç£¬¹Ê²»Ê¹ÓÃ dropout
+        #è®­ç»ƒå¥½çš„ç½‘ç»œï¼Œæ•…ä¸ä½¿ç”¨ dropout
         y = mnist_lenet5_forward.forward(x,False,None)
 
         ema = tf.train.ExponentialMovingAverage(mnist_lenet5_backward.MOVING_AVERAGE_DECAY)
         ema_restore = ema.variables_to_restore()
         saver = tf.train.Saver(ema_restore)
 
-		#ÅĞ¶ÏÔ¤²âÖµºÍÊµ¼ÊÖµÊÇ·ñÏàÍ¬ 
+        #åˆ¤æ–­é¢„æµ‹å€¼å’Œå®é™…å€¼æ˜¯å¦ç›¸åŒ
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1)) 
-		## ÇóÆ½¾ùµÃµ½×¼È·ÂÊ
+        ## æ±‚å¹³å‡å¾—åˆ°å‡†ç¡®ç‡
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)) 
 
         while True:
@@ -34,19 +33,19 @@ def test(mnist):
                 ckpt = tf.train.get_checkpoint_state(mnist_lenet5_backward.MODEL_SAVE_PATH)
                 if ckpt and ckpt.model_checkpoint_path:
                     saver.restore(sess, ckpt.model_checkpoint_path)	
-					# ¸ù¾İ¶ÁÈëµÄÄ£ĞÍÃû×ÖÇĞ·Ö³ö¸ÃÄ£ĞÍÊÇÊôÓÚµü´úÁË¶àÉÙ´Î±£´æµÄ 
+                    # æ ¹æ®è¯»å…¥çš„æ¨¡å‹åå­—åˆ‡åˆ†å‡ºè¯¥æ¨¡å‹æ˜¯å±äºè¿­ä»£äº†å¤šå°‘æ¬¡ä¿å­˜çš„
                     global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1] 
                     reshaped_x = np.reshape(mnist.test.images,(
                     mnist.test.num_examples,
-        	        mnist_lenet5_forward.IMAGE_SIZE,
-        	        mnist_lenet5_forward.IMAGE_SIZE,
-        	        mnist_lenet5_forward.NUM_CHANNELS))
-					#ÀûÓÃ¶àÏß³ÌÌá¸ßÍ¼Æ¬ºÍ±êÇ©µÄÅú»ñÈ¡Ğ§ÂÊ
+                    mnist_lenet5_forward.IMAGE_SIZE,
+                    mnist_lenet5_forward.IMAGE_SIZE,
+                    mnist_lenet5_forward.NUM_CHANNELS))
+                    #åˆ©ç”¨å¤šçº¿ç¨‹æé«˜å›¾ç‰‡å’Œæ ‡ç­¾çš„æ‰¹è·å–æ•ˆç‡
                     coord = tf.train.Coordinator()#3
                     threads = tf.train.start_queue_runners(sess=sess, coord=coord)#4
                     accuracy_score = sess.run(accuracy, feed_dict={x:reshaped_x,y_:mnist.test.labels}) 
                     print("After %s training step(s), test accuracy = %g" % (global_step, accuracy_score))
-					#¹Ø±ÕÏß³ÌĞ­µ÷Æ÷
+                    #å…³é—­çº¿ç¨‹åè°ƒå™¨
                     coord.request_stop()#6
                     coord.join(threads)#7
                 else:

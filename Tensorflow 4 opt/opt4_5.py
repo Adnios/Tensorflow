@@ -30,4 +30,4 @@ with tf.Session() as sess:
         w_val = sess.run(w)#计算权重
         loss_val = sess.run(loss)#计算损失函数
         #打印相应数据
-        print "After %s steps: global_step is %f, w is %f, learning rate is %f, loss is %f" % (i, global_step_val, w_val, learning_rate_val, loss_val)
+        print ("After %s steps: global_step is %f, w is %f, learning rate is %f, loss is %f" % (i, global_step_val, w_val, learning_rate_val, loss_val))

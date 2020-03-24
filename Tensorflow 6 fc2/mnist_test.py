@@ -1,47 +1,46 @@
-#coding:utf-8
-#ÑéÖ¤ÍøÂçµÄ×¼È·ĞÔºÍ·º»¯ĞÔ
+#éªŒè¯ç½‘ç»œçš„å‡†ç¡®æ€§å’Œæ³›åŒ–æ€§
 import time
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import mnist_forward
 import mnist_backward
-#³ÌĞò5ÃëµÄÑ­»·¼ä¸ôÊ±¼ä
+#ç¨‹åº5ç§’çš„å¾ªç¯é—´éš”æ—¶é—´
 TEST_INTERVAL_SECS = 5
 
 def test(mnist):
-	#ÀûÓÃtf.Graph()¸´ÏÖÖ®Ç°¶¨ÒåµÄ¼ÆËãÍ¼
+    #åˆ©ç”¨tf.Graph()å¤ç°ä¹‹å‰å®šä¹‰çš„è®¡ç®—å›¾
     with tf.Graph().as_default() as g:
-		#ÀûÓÃplaceholder¸øÑµÁ·Êı¾İxºÍ±êÇ©y_Õ¼Î»
+        #åˆ©ç”¨placeholderç»™è®­ç»ƒæ•°æ®xå’Œæ ‡ç­¾y_å ä½
         x = tf.placeholder(tf.float32, [None, mnist_forward.INPUT_NODE])
         y_ = tf.placeholder(tf.float32, [None, mnist_forward.OUTPUT_NODE])
-		#µ÷ÓÃmnist_forwardÎÄ¼şÖĞµÄÇ°Ïò´«²¥¹ı³Ìforword()º¯Êı
+        #è°ƒç”¨mnist_forwardæ–‡ä»¶ä¸­çš„å‰å‘ä¼ æ’­è¿‡ç¨‹forword()å‡½æ•°
         y = mnist_forward.forward(x, None)
-        #ÊµÀı»¯¾ßÓĞ»¬¶¯Æ½¾ùµÄsaver¶ÔÏó£¬´Ó¶øÔÚ»á»°±»¼ÓÔØÊ±Ä£ĞÍÖĞµÄËùÓĞ²ÎÊı±»¸³ÖµÎª¸÷×ÔµÄ»¬¶¯Æ½¾ùÖµ£¬ÔöÇ¿Ä£ĞÍµÄÎÈ¶¨ĞÔ
+        #å®ä¾‹åŒ–å…·æœ‰æ»‘åŠ¨å¹³å‡çš„saverå¯¹è±¡ï¼Œä»è€Œåœ¨ä¼šè¯è¢«åŠ è½½æ—¶æ¨¡å‹ä¸­çš„æ‰€æœ‰å‚æ•°è¢«èµ‹å€¼ä¸ºå„è‡ªçš„æ»‘åŠ¨å¹³å‡å€¼ï¼Œå¢å¼ºæ¨¡å‹çš„ç¨³å®šæ€§
         ema = tf.train.ExponentialMovingAverage(mnist_backward.MOVING_AVERAGE_DECAY)
         ema_restore = ema.variables_to_restore()
         saver = tf.train.Saver(ema_restore)
-		#¼ÆËãÄ£ĞÍÔÚ²âÊÔ¼¯ÉÏµÄ×¼È·ÂÊ
+        #è®¡ç®—æ¨¡å‹åœ¨æµ‹è¯•é›†ä¸Šçš„å‡†ç¡®ç‡
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
         while True:
             with tf.Session() as sess:
-				#¼ÓÔØÖ¸¶¨Â·¾¶ÏÂµÄckpt
+                #åŠ è½½æŒ‡å®šè·¯å¾„ä¸‹çš„ckpt
                 ckpt = tf.train.get_checkpoint_state(mnist_backward.MODEL_SAVE_PATH)
-				#ÈôÄ£ĞÍ´æÔÚ£¬Ôò¼ÓÔØ³öÄ£ĞÍµ½µ±Ç°¶Ô»°£¬ÔÚ²âÊÔÊı¾İ¼¯ÉÏ½øĞĞ×¼È·ÂÊÑéÖ¤£¬²¢´òÓ¡³öµ±Ç°ÂÖÊıÏÂµÄ×¼È·ÂÊ
+                #è‹¥æ¨¡å‹å­˜åœ¨ï¼Œåˆ™åŠ è½½å‡ºæ¨¡å‹åˆ°å½“å‰å¯¹è¯ï¼Œåœ¨æµ‹è¯•æ•°æ®é›†ä¸Šè¿›è¡Œå‡†ç¡®ç‡éªŒè¯ï¼Œå¹¶æ‰“å°å‡ºå½“å‰è½®æ•°ä¸‹çš„å‡†ç¡®ç‡
                 if ckpt and ckpt.model_checkpoint_path:
                     saver.restore(sess, ckpt.model_checkpoint_path)
                     global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
                     accuracy_score = sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels})
                     print("After %s training step(s), test accuracy = %g" % (global_step, accuracy_score))
-				#ÈôÄ£ĞÍ²»´æÔÚ£¬Ôò´òÓ¡³öÄ£ĞÍ²»´æÔÚµÄÌáÊ¾£¬´Ó¶øtest()º¯ÊıÍê³É
+                #è‹¥æ¨¡å‹ä¸å­˜åœ¨ï¼Œåˆ™æ‰“å°å‡ºæ¨¡å‹ä¸å­˜åœ¨çš„æç¤ºï¼Œä»è€Œtest()å‡½æ•°å®Œæˆ
                 else:
                     print('No checkpoint file found')
                     return
             time.sleep(TEST_INTERVAL_SECS)
 
 def main():
-	#¼ÓÔØÖ¸¶¨Â·¾¶ÏÂµÄ²âÊÔÊı¾İ¼¯
+    #åŠ è½½æŒ‡å®šè·¯å¾„ä¸‹çš„æµ‹è¯•æ•°æ®é›†
     mnist = input_data.read_data_sets("./data/", one_hot=True)
     test(mnist)
 

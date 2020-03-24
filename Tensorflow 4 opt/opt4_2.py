@@ -38,6 +38,6 @@ with tf.Session() as sess:
         end = (i*BATCH_SIZE) % 32 + BATCH_SIZE  #[i:i+8]
         sess.run(train_step, feed_dict={x: X[start:end], y_: Y[start:end]})#训练
         if i % 500 == 0:#每500轮打印输出
-            print "After %d training steps, w1 is: " % (i)#打印i
-            print sess.run(w1), "\n"#打印w1
-    print "Final w1 is: \n", sess.run(w1)#最终打印w1
+            print("After %d training steps, w1 is: " % (i))#打印i
+            print(sess.run(w1), "\n")#打印w1
+    print("Final w1 is: \n", sess.run(w1))#最终打印w1

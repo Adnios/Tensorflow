@@ -1,13 +1,14 @@
-#coding:utf-8
 import time
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import mnist_forward
 import mnist_backward
 import mnist_generateds
+
 TEST_INTERVAL_SECS = 5
-#ÊÖ¶¯¸ø³ö²âÊÔµÄ×ÜÑù±¾Êı1Íò
-TEST_NUM = 10000#1
+# æ‰‹åŠ¨ç»™å‡ºæµ‹è¯•çš„æ€»æ ·æœ¬æ•°1ä¸‡
+TEST_NUM = 10000  # 1
+
 
 def test():
     with tf.Graph().as_default() as g:
@@ -18,11 +19,11 @@ def test():
         ema = tf.train.ExponentialMovingAverage(mnist_backward.MOVING_AVERAGE_DECAY)
         ema_restore = ema.variables_to_restore()
         saver = tf.train.Saver(ema_restore)
-		
+
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        #ÓÃº¯Êıget_tfrecordÌæ»»¶ÁÈ¡ËùÓĞ²âÊÔ¼¯1ÍòÕÅÍ¼Æ¬
-        img_batch, label_batch = mnist_generateds.get_tfrecord(TEST_NUM, isTrain=False)#2
+        # ç”¨å‡½æ•°get_tfrecordæ›¿æ¢è¯»å–æ‰€æœ‰æµ‹è¯•é›†1ä¸‡å¼ å›¾ç‰‡
+        img_batch, label_batch = mnist_generateds.get_tfrecord(TEST_NUM, isTrain=False)  # 2
 
         while True:
             with tf.Session() as sess:
@@ -30,28 +31,30 @@ def test():
                 if ckpt and ckpt.model_checkpoint_path:
                     saver.restore(sess, ckpt.model_checkpoint_path)
                     global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-                    #ÀûÓÃ¶àÏß³ÌÌá¸ßÍ¼Æ¬ºÍ±êÇ©µÄÅú»ñÈ¡Ğ§ÂÊ	
-                    coord = tf.train.Coordinator()#3
-					#Æô¶¯ÊäÈë¶ÓÁĞµÄÏß³Ì
-                    threads = tf.train.start_queue_runners(sess=sess, coord=coord)#4
+                    # åˆ©ç”¨å¤šçº¿ç¨‹æé«˜å›¾ç‰‡å’Œæ ‡ç­¾çš„æ‰¹è·å–æ•ˆç‡
+                    coord = tf.train.Coordinator()  # 3
+                    # å¯åŠ¨è¾“å…¥é˜Ÿåˆ—çš„çº¿ç¨‹
+                    threads = tf.train.start_queue_runners(sess=sess, coord=coord)  # 4
 
-                    #Ö´ĞĞÍ¼Æ¬ºÍ±êÇ©µÄÅú»ñÈ¡
-                    xs, ys = sess.run([img_batch, label_batch])#5
+                    # æ‰§è¡Œå›¾ç‰‡å’Œæ ‡ç­¾çš„æ‰¹è·å–
+                    xs, ys = sess.run([img_batch, label_batch])  # 5
 
                     accuracy_score = sess.run(accuracy, feed_dict={x: xs, y_: ys})
 
                     print("After %s training step(s), test accuracy = %g" % (global_step, accuracy_score))
-                    #¹Ø±ÕÏß³ÌĞ­µ÷Æ÷
-                    coord.request_stop()#6
-                    coord.join(threads)#7
+                    # å…³é—­çº¿ç¨‹åè°ƒå™¨
+                    coord.request_stop()  # 6
+                    coord.join(threads)  # 7
 
                 else:
                     print('No checkpoint file found')
                     return
             time.sleep(TEST_INTERVAL_SECS)
 
+
 def main():
-    test()#8
+    test()  # 8
+
 
 if __name__ == '__main__':
     main()

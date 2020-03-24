@@ -1,9 +1,8 @@
-#coding:utf-8
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import mnist_forward
 import os
-import mnist_generateds#1
+import mnist_generateds  # 1
 
 BATCH_SIZE = 200
 LEARNING_RATE_BASE = 0.1
@@ -11,17 +10,17 @@ LEARNING_RATE_DECAY = 0.99
 REGULARIZER = 0.0001
 STEPS = 50000
 MOVING_AVERAGE_DECAY = 0.99
-MODEL_SAVE_PATH="./model/"
-MODEL_NAME="mnist_model"
-#ÊÖ¶¯¸ø³öÑµÁ·µÄ×ÜÑù±¾Êı6Íò
-train_num_examples = 60000#2
+MODEL_SAVE_PATH = "./model/"
+MODEL_NAME = "mnist_model"
+# æ‰‹åŠ¨ç»™å‡ºè®­ç»ƒçš„æ€»æ ·æœ¬æ•°6ä¸‡
+train_num_examples = 60000  # 2
+
 
 def backward():
-
     x = tf.placeholder(tf.float32, [None, mnist_forward.INPUT_NODE])
     y_ = tf.placeholder(tf.float32, [None, mnist_forward.OUTPUT_NODE])
     y = mnist_forward.forward(x, REGULARIZER)
-    global_step = tf.Variable(0, trainable=False) 
+    global_step = tf.Variable(0, trainable=False)
 
     ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
     cem = tf.reduce_mean(ce)
@@ -30,7 +29,7 @@ def backward():
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,
         global_step,
-        train_num_examples / BATCH_SIZE, 
+        train_num_examples / BATCH_SIZE,
         LEARNING_RATE_DECAY,
         staircase=True)
 
@@ -42,8 +41,8 @@ def backward():
         train_op = tf.no_op(name='train')
 
     saver = tf.train.Saver()
-	#Ò»´ÎÅú»ñÈ¡ batch_sizeÕÅÍ¼Æ¬ºÍ±êÇ©
-    img_batch, label_batch = mnist_generateds.get_tfrecord(BATCH_SIZE, isTrain=True)#3
+    # ä¸€æ¬¡æ‰¹è·å– batch_sizeå¼ å›¾ç‰‡å’Œæ ‡ç­¾
+    img_batch, label_batch = mnist_generateds.get_tfrecord(BATCH_SIZE, isTrain=True)  # 3
 
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer()
@@ -53,27 +52,26 @@ def backward():
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
 
-		#ÀûÓÃ¶àÏß³ÌÌá¸ßÍ¼Æ¬ºÍ±êÇ©µÄÅú»ñÈ¡Ğ§ÂÊ	
-        coord = tf.train.Coordinator()#4
-		#Æô¶¯ÊäÈë¶ÓÁĞµÄÏß³Ì
-        threads = tf.train.start_queue_runners(sess=sess, coord=coord)#5
-        
+        # åˆ©ç”¨å¤šçº¿ç¨‹æé«˜å›¾ç‰‡å’Œæ ‡ç­¾çš„æ‰¹è·å–æ•ˆç‡
+        coord = tf.train.Coordinator()  # 4
+        # å¯åŠ¨è¾“å…¥é˜Ÿåˆ—çš„çº¿ç¨‹
+        threads = tf.train.start_queue_runners(sess=sess, coord=coord)  # 5
+
         for i in range(STEPS):
-			#Ö´ĞĞÍ¼Æ¬ºÍ±êÇ©µÄÅú»ñÈ¡
-            xs, ys = sess.run([img_batch, label_batch])#6
+            # æ‰§è¡Œå›¾ç‰‡å’Œæ ‡ç­¾çš„æ‰¹è·å–
+            xs, ys = sess.run([img_batch, label_batch])  # 6
             _, loss_value, step = sess.run([train_op, loss, global_step], feed_dict={x: xs, y_: ys})
             if i % 1000 == 0:
                 print("After %d training step(s), loss on training batch is %g." % (step, loss_value))
                 saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step=global_step)
-        #¹Ø±ÕÏß³ÌĞ­µ÷Æ÷
-        coord.request_stop()#7
-        coord.join(threads)#8
+        # å…³é—­çº¿ç¨‹åè°ƒå™¨
+        coord.request_stop()  # 7
+        coord.join(threads)  # 8
 
 
 def main():
-    backward()#9
+    backward()  # 9
+
 
 if __name__ == '__main__':
     main()
-
-

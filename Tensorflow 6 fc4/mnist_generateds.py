@@ -1,98 +1,105 @@
-#coding:utf-8
+# coding:utf-8
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import os
 
-image_train_path='./mnist_data_jpg/mnist_train_jpg_60000/'
-label_train_path='./mnist_data_jpg/mnist_train_jpg_60000.txt'
-tfRecord_train='./data/mnist_train.tfrecords'
-image_test_path='./mnist_data_jpg/mnist_test_jpg_10000/'
-label_test_path='./mnist_data_jpg/mnist_test_jpg_10000.txt'
-tfRecord_test='./data/mnist_test.tfrecords'
-data_path='./data'
+image_train_path = './mnist_data_jpg/mnist_train_jpg_60000/'
+label_train_path = './mnist_data_jpg/mnist_train_jpg_60000.txt'
+tfRecord_train = './data/mnist_train.tfrecords'
+image_test_path = './mnist_data_jpg/mnist_test_jpg_10000/'
+label_test_path = './mnist_data_jpg/mnist_test_jpg_10000.txt'
+tfRecord_test = './data/mnist_test.tfrecords'
+data_path = './data'
 resize_height = 28
 resize_width = 28
 
-#Éú³ÉtfrecordsÎÄ¼ş
+
+# ç”Ÿæˆtfrecordsæ–‡ä»¶
 def write_tfRecord(tfRecordName, image_path, label_path):
-	#ĞÂ½¨Ò»¸öwriter
-    writer = tf.python_io.TFRecordWriter(tfRecordName)  
-    num_pic = 0 
+    # æ–°å»ºä¸€ä¸ªwriter
+    writer = tf.python_io.TFRecordWriter(tfRecordName)
+    num_pic = 0
     f = open(label_path, 'r')
     contents = f.readlines()
     f.close()
-	#Ñ­»·±éÀúÃ¿ÕÅÍ¼ºÍ±êÇ© 
+    # å¾ªç¯éå†æ¯å¼ å›¾å’Œæ ‡ç­¾
     for content in contents:
         value = content.split()
-        img_path = image_path + value[0] 
+        img_path = image_path + value[0]
         img = Image.open(img_path)
-        img_raw = img.tobytes() 
-        labels = [0] * 10  
-        labels[int(value[1])] = 1  
-        #°ÑÃ¿ÕÅÍ¼Æ¬ºÍ±êÇ©·â×°µ½exampleÖĞ    
+        img_raw = img.tobytes()
+        labels = [0] * 10
+        labels[int(value[1])] = 1
+        # æŠŠæ¯å¼ å›¾ç‰‡å’Œæ ‡ç­¾å°è£…åˆ°exampleä¸­
         example = tf.train.Example(features=tf.train.Features(feature={
-                'img_raw': tf.train.Feature(bytes_list=tf.train.BytesList(value=[img_raw])),
-                'label': tf.train.Feature(int64_list=tf.train.Int64List(value=labels))
-                })) 
-		#°Ñexample½øĞĞĞòÁĞ»¯
+            'img_raw': tf.train.Feature(bytes_list=tf.train.BytesList(value=[img_raw])),
+            'label': tf.train.Feature(int64_list=tf.train.Int64List(value=labels))
+        }))
+        # æŠŠexampleè¿›è¡Œåºåˆ—åŒ–
         writer.write(example.SerializeToString())
-        num_pic += 1 
-        print ("the number of picture:", num_pic)
-	#¹Ø±Õwriter
+        num_pic += 1
+        print("the number of picture:", num_pic)
+    # å…³é—­writer
     writer.close()
     print("write tfrecord successful")
 
+
 def generate_tfRecord():
-	isExists = os.path.exists(data_path) 
-	if not isExists: 
- 		os.makedirs(data_path)
-		print 'The directory was created successfully'
-	else:
-		print 'directory already exists' 
-	write_tfRecord(tfRecord_train, image_train_path, label_train_path)
- 	write_tfRecord(tfRecord_test, image_test_path, label_test_path)
-#½âÎötfrecordsÎÄ¼ş  
+    isExists = os.path.exists(data_path)
+    if not isExists:
+        os.makedirs(data_path)
+        print('The directory was created successfully')
+    else:
+        print('directory already exists')
+    write_tfRecord(tfRecord_train, image_train_path, label_train_path)
+    write_tfRecord(tfRecord_test, image_test_path, label_test_path)
+
+
+# è§£ætfrecordsæ–‡ä»¶
 def read_tfRecord(tfRecord_path):
-	#¸Ãº¯Êı»áÉú³ÉÒ»¸öÏÈÈëÏÈ³öµÄ¶ÓÁĞ£¬ÎÄ¼şÔÄ¶ÁÆ÷»áÊ¹ÓÃËüÀ´¶ÁÈ¡Êı¾İ
+    # è¯¥å‡½æ•°ä¼šç”Ÿæˆä¸€ä¸ªå…ˆå…¥å…ˆå‡ºçš„é˜Ÿåˆ—ï¼Œæ–‡ä»¶é˜…è¯»å™¨ä¼šä½¿ç”¨å®ƒæ¥è¯»å–æ•°æ®
     filename_queue = tf.train.string_input_producer([tfRecord_path], shuffle=True)
-	#ĞÂ½¨Ò»¸öreader
+    # æ–°å»ºä¸€ä¸ªreader
     reader = tf.TFRecordReader()
-	#°Ñ¶Á³öµÄÃ¿¸öÑù±¾±£´æÔÚserialized_exampleÖĞ½øĞĞ½âĞòÁĞ»¯£¬±êÇ©ºÍÍ¼Æ¬µÄ¼üÃûÓ¦¸ÃºÍÖÆ×÷tfrecordsµÄ¼üÃûÏàÍ¬£¬ÆäÖĞ±êÇ©¸ø³ö¼¸·ÖÀà¡£
-    _, serialized_example = reader.read(filename_queue) 
-	#½«tf.train.ExampleĞ­ÒéÄÚ´æ¿é(protocol buffer)½âÎöÎªÕÅÁ¿
+    # æŠŠè¯»å‡ºçš„æ¯ä¸ªæ ·æœ¬ä¿å­˜åœ¨serialized_exampleä¸­è¿›è¡Œè§£åºåˆ—åŒ–ï¼Œæ ‡ç­¾å’Œå›¾ç‰‡çš„é”®ååº”è¯¥å’Œåˆ¶ä½œtfrecordsçš„é”®åç›¸åŒï¼Œå…¶ä¸­æ ‡ç­¾ç»™å‡ºå‡ åˆ†ç±»ã€‚
+    _, serialized_example = reader.read(filename_queue)
+    # å°†tf.train.Exampleåè®®å†…å­˜å—(protocol buffer)è§£æä¸ºå¼ é‡
     features = tf.parse_single_example(serialized_example,
                                        features={
-                                        'label': tf.FixedLenFeature([10], tf.int64),
-                                        'img_raw': tf.FixedLenFeature([], tf.string)
-                                        })
-	#½«img_raw×Ö·û´®×ª»»Îª8Î»ÎŞ·ûºÅÕûĞÍ
+                                           'label': tf.FixedLenFeature([10], tf.int64),
+                                           'img_raw': tf.FixedLenFeature([], tf.string)
+                                       })
+    # å°†img_rawå­—ç¬¦ä¸²è½¬æ¢ä¸º8ä½æ— ç¬¦å·æ•´å‹
     img = tf.decode_raw(features['img_raw'], tf.uint8)
-	#½«ĞÎ×´±äÎªÒ»ĞĞ784ÁĞ
+    # å°†å½¢çŠ¶å˜ä¸ºä¸€è¡Œ784åˆ—
     img.set_shape([784])
     img = tf.cast(img, tf.float32) * (1. / 255)
-	#±ä³É0µ½1Ö®¼äµÄ¸¡µãÊı      
+    # å˜æˆ0åˆ°1ä¹‹é—´çš„æµ®ç‚¹æ•°
     label = tf.cast(features['label'], tf.float32)
-	#·µ»ØÍ¼Æ¬ºÍ±êÇ©
-    return img, label 
-      
+    # è¿”å›å›¾ç‰‡å’Œæ ‡ç­¾
+    return img, label
+
+
 def get_tfrecord(num, isTrain=True):
     if isTrain:
         tfRecord_path = tfRecord_train
     else:
         tfRecord_path = tfRecord_test
     img, label = read_tfRecord(tfRecord_path)
-	#Ëæ»ú¶ÁÈ¡Ò»¸öbatchµÄÊı¾İ
+    # éšæœºè¯»å–ä¸€ä¸ªbatchçš„æ•°æ®
     img_batch, label_batch = tf.train.shuffle_batch([img, label],
-                                                    batch_size = num,
-                                                    num_threads = 2,
-                                                    capacity = 1000,
-                                                    min_after_dequeue = 700)
-	#·µ»ØµÄÍ¼Æ¬ºÍ±êÇ©ÎªËæ»ú³éÈ¡µÄbatch_size×é
+                                                    batch_size=num,
+                                                    num_threads=2,
+                                                    capacity=1000,
+                                                    min_after_dequeue=700)
+    # è¿”å›çš„å›¾ç‰‡å’Œæ ‡ç­¾ä¸ºéšæœºæŠ½å–çš„batch_sizeç»„
     return img_batch, label_batch
+
 
 def main():
     generate_tfRecord()
+
 
 if __name__ == '__main__':
     main()

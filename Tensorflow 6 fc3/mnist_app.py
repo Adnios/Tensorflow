@@ -1,73 +1,77 @@
-#coding:utf-8
-
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import mnist_backward
 import mnist_forward
 
+
 def restore_model(testPicArr):
-	#ÀûÓÃtf.Graph()¸´ÏÖÖ®Ç°¶¨ÒåµÄ¼ÆËãÍ¼
-	with tf.Graph().as_default() as tg:
-		x = tf.placeholder(tf.float32, [None, mnist_forward.INPUT_NODE])
-		#µ÷ÓÃmnist_forwardÎÄ¼şÖĞµÄÇ°Ïò´«²¥¹ı³Ìforword()º¯Êı
-		y = mnist_forward.forward(x, None)
-		#µÃµ½¸ÅÂÊ×î´óµÄÔ¤²âÖµ
-		preValue = tf.argmax(y, 1)
+    # åˆ©ç”¨tf.Graph()å¤ç°ä¹‹å‰å®šä¹‰çš„è®¡ç®—å›¾
+    with tf.Graph().as_default() as tg:
+        x = tf.placeholder(tf.float32, [None, mnist_forward.INPUT_NODE])
+        # è°ƒç”¨mnist_forwardæ–‡ä»¶ä¸­çš„å‰å‘ä¼ æ’­è¿‡ç¨‹forword()å‡½æ•°
+        y = mnist_forward.forward(x, None)
+        # å¾—åˆ°æ¦‚ç‡æœ€å¤§çš„é¢„æµ‹å€¼
+        preValue = tf.argmax(y, 1)
 
-        #ÊµÀı»¯¾ßÓĞ»¬¶¯Æ½¾ùµÄsaver¶ÔÏó
-		variable_averages = tf.train.ExponentialMovingAverage(mnist_backward.MOVING_AVERAGE_DECAY)
- 		variables_to_restore = variable_averages.variables_to_restore()
- 		saver = tf.train.Saver(variables_to_restore)
+        # å®ä¾‹åŒ–å…·æœ‰æ»‘åŠ¨å¹³å‡çš„saverå¯¹è±¡
+        variable_averages = tf.train.ExponentialMovingAverage(mnist_backward.MOVING_AVERAGE_DECAY)
+        variables_to_restore = variable_averages.variables_to_restore()
+        saver = tf.train.Saver(variables_to_restore)
 
-		with tf.Session() as sess:
-			#Í¨¹ıckpt»ñÈ¡×îĞÂ±£´æµÄÄ£ĞÍ
-			ckpt = tf.train.get_checkpoint_state(mnist_backward.MODEL_SAVE_PATH)
-			if ckpt and ckpt.model_checkpoint_path:
-				saver.restore(sess, ckpt.model_checkpoint_path)
-		
-				preValue = sess.run(preValue, feed_dict={x:testPicArr})
-				return preValue
-			else:
-				print("No checkpoint file found")
-				return -1
+        with tf.Session() as sess:
+            # é€šè¿‡ckptè·å–æœ€æ–°ä¿å­˜çš„æ¨¡å‹
+            ckpt = tf.train.get_checkpoint_state(mnist_backward.MODEL_SAVE_PATH)
+            if ckpt and ckpt.model_checkpoint_path:
+                saver.restore(sess, ckpt.model_checkpoint_path)
 
-#Ô¤´¦Àí£¬°üÀ¨resize£¬×ª±ä»Ò¶ÈÍ¼£¬¶şÖµ»¯
+                preValue = sess.run(preValue, feed_dict={x: testPicArr})
+                return preValue
+            else:
+                print("No checkpoint file found")
+                return -1
+
+
+# é¢„å¤„ç†ï¼ŒåŒ…æ‹¬resizeï¼Œè½¬å˜ç°åº¦å›¾ï¼ŒäºŒå€¼åŒ–
 def pre_pic(picName):
-	img = Image.open(picName)
-	reIm = img.resize((28,28), Image.ANTIALIAS)
-	im_arr = np.array(reIm.convert('L'))
-	#¶ÔÍ¼Æ¬×ö¶şÖµ»¯´¦Àí£¨ÕâÑùÒÔÂËµôÔëÉù£¬ÁíÍâµ÷ÊÔÖĞ¿ÉÊÊµ±µ÷½ÚãĞÖµ£©
-	threshold = 50
-	#Ä£ĞÍµÄÒªÇóÊÇºÚµ×°××Ö£¬µ«ÊäÈëµÄÍ¼ÊÇ°×µ×ºÚ×Ö£¬ËùÒÔĞèÒª¶ÔÃ¿¸öÏñËØµãµÄÖµ¸ÄÎª255¼õÈ¥Ô­ÖµÒÔµÃµ½»¥²¹µÄ·´É«¡£
-	for i in range(28):
-		for j in range(28):
-			im_arr[i][j] = 255 - im_arr[i][j]
- 			if (im_arr[i][j] < threshold):
- 				im_arr[i][j] = 0
-			else: im_arr[i][j] = 255
-    #°ÑÍ¼Æ¬ĞÎ×´À­³É1ĞĞ784ÁĞ£¬²¢°ÑÖµ±äÎª¸¡µãĞÍ£¨ÒòÎªÒªÇóÏñËØµãÊÇ0-1 Ö®¼äµÄ¸¡µãÊı£©
-	nm_arr = im_arr.reshape([1, 784])
-	nm_arr = nm_arr.astype(np.float32)
-	#½Ó×ÅÈÃÏÖÓĞµÄRGBÍ¼´Ó0-255Ö®¼äµÄÊı±äÎª0-1Ö®¼äµÄ¸¡µãÊı
-	img_ready = np.multiply(nm_arr, 1.0/255.0)
+    img = Image.open(picName)
+    reIm = img.resize((28, 28), Image.ANTIALIAS)
+    im_arr = np.array(reIm.convert('L'))
+    # å¯¹å›¾ç‰‡åšäºŒå€¼åŒ–å¤„ç†ï¼ˆè¿™æ ·ä»¥æ»¤æ‰å™ªå£°ï¼Œå¦å¤–è°ƒè¯•ä¸­å¯é€‚å½“è°ƒèŠ‚é˜ˆå€¼ï¼‰
+    threshold = 50
+    # æ¨¡å‹çš„è¦æ±‚æ˜¯é»‘åº•ç™½å­—ï¼Œä½†è¾“å…¥çš„å›¾æ˜¯ç™½åº•é»‘å­—ï¼Œæ‰€ä»¥éœ€è¦å¯¹æ¯ä¸ªåƒç´ ç‚¹çš„å€¼æ”¹ä¸º255å‡å»åŸå€¼ä»¥å¾—åˆ°äº’è¡¥çš„åè‰²ã€‚
+    for i in range(28):
+        for j in range(28):
+            im_arr[i][j] = 255 - im_arr[i][j]
+            if (im_arr[i][j] < threshold):
+                im_arr[i][j] = 0
+            else:
+                im_arr[i][j] = 255
+    # æŠŠå›¾ç‰‡å½¢çŠ¶æ‹‰æˆ1è¡Œ784åˆ—ï¼Œå¹¶æŠŠå€¼å˜ä¸ºæµ®ç‚¹å‹ï¼ˆå› ä¸ºè¦æ±‚åƒç´ ç‚¹æ˜¯0-1 ä¹‹é—´çš„æµ®ç‚¹æ•°ï¼‰
+    nm_arr = im_arr.reshape([1, 784])
+    nm_arr = nm_arr.astype(np.float32)
+    # æ¥ç€è®©ç°æœ‰çš„RGBå›¾ä»0-255ä¹‹é—´çš„æ•°å˜ä¸º0-1ä¹‹é—´çš„æµ®ç‚¹æ•°
+    img_ready = np.multiply(nm_arr, 1.0 / 255.0)
 
-	return img_ready
+    return img_ready
+
 
 def application():
-	#ÊäÈëÒªÊ¶±ğµÄ¼¸ÕÅÍ¼Æ¬
-	testNum = input("input the number of test pictures:")
-	for i in range(testNum):
-        #¸ø³ö´ıÊ¶±ğÍ¼Æ¬µÄÂ·¾¶ºÍÃû³Æ
-		testPic = raw_input("the path of test picture:")
-		#Í¼Æ¬Ô¤´¦Àí
-		testPicArr = pre_pic(testPic)
-		#»ñÈ¡Ô¤²â½á¹û
-		preValue = restore_model(testPicArr)
-		print "The prediction number is:", preValue
+    # è¾“å…¥è¦è¯†åˆ«çš„å‡ å¼ å›¾ç‰‡
+    testNum = int(input("input the number of test pictures:"))
+    for i in range(testNum):
+        # ç»™å‡ºå¾…è¯†åˆ«å›¾ç‰‡çš„è·¯å¾„å’Œåç§°
+        testPic = input("the path of test picture:")
+        # å›¾ç‰‡é¢„å¤„ç†
+        testPicArr = pre_pic(testPic)
+        # è·å–é¢„æµ‹ç»“æœ
+        preValue = restore_model(testPicArr)
+        print("The prediction number is:", preValue)
+
 
 def main():
-	application()
+    application()
+
 
 if __name__ == '__main__':
-	main()		
+    main()

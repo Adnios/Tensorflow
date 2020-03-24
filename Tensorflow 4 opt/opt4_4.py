@@ -17,7 +17,4 @@ with tf.Session() as sess:
         sess.run(train_step)#训练
         w_val = sess.run(w)#权重
         loss_val = sess.run(loss)#损失函数
-        print "After %s steps: w is %f,   loss is %f." % (i, w_val,loss_val)#打印
-
-
-
+        print("After %s steps: w is %f,   loss is %f." % (i, w_val,loss_val))#打印

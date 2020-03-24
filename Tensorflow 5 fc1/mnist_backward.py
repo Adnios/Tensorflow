@@ -1,85 +1,83 @@
-#coding:utf-8
-#2·´Ïò´«²¥¹ı³Ì
-#ÒıÈëtensorflow¡¢input_data¡¢Ç°Ïò´«²¥mnist_forwardºÍosÄ£¿é
+#2åå‘ä¼ æ’­è¿‡ç¨‹
+#å¼•å…¥tensorflowã€input_dataã€å‰å‘ä¼ æ’­mnist_forwardå’Œosæ¨¡å—
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import mnist_forward
 import os
 
-#Ã¿ÂÖÎ¹ÈëÉñ¾­ÍøÂçµÄÍ¼Æ¬Êı
+#æ¯è½®å–‚å…¥ç¥ç»ç½‘ç»œçš„å›¾ç‰‡æ•°
 BATCH_SIZE = 200
-#³õÊ¼Ñ§Ï°ÂÊ
+#åˆå§‹å­¦ä¹ ç‡
 LEARNING_RATE_BASE = 0.1
-#Ñ§Ï°ÂÊË¥¼õÂÊ
+#å­¦ä¹ ç‡è¡°å‡ç‡
 LEARNING_RATE_DECAY = 0.99
-#ÕıÔò»¯ÏµÊı
+#æ­£åˆ™åŒ–ç³»æ•°
 REGULARIZER = 0.0001
-#ÑµÁ·ÂÖÊı
+#è®­ç»ƒè½®æ•°
 STEPS = 50000
-#»¬¶¯Æ½¾ùË¥¼õÂÊ
+#æ»‘åŠ¨å¹³å‡è¡°å‡ç‡
 MOVING_AVERAGE_DECAY = 0.99
-#Ä£ĞÍ±£´æÂ·¾¶
+#æ¨¡å‹ä¿å­˜è·¯å¾„
 MODEL_SAVE_PATH="./model/"
-#Ä£ĞÍ±£´æÃû³Æ
+#æ¨¡å‹ä¿å­˜åç§°
 MODEL_NAME="mnist_model"
 
 
 def backward(mnist):
-    #ÓÃplaceholder¸øÑµÁ·Êı¾İxºÍ±êÇ©y_Õ¼Î»
+    #ç”¨placeholderç»™è®­ç»ƒæ•°æ®xå’Œæ ‡ç­¾y_å ä½
     x = tf.placeholder(tf.float32, [None, mnist_forward.INPUT_NODE])
     y_ = tf.placeholder(tf.float32, [None, mnist_forward.OUTPUT_NODE])
-    #µ÷ÓÃmnist_forwardÎÄ¼şÖĞµÄÇ°Ïò´«²¥¹ı³Ìforword()º¯Êı£¬²¢ÉèÖÃÕıÔò»¯£¬¼ÆËãÑµÁ·Êı¾İ¼¯ÉÏµÄÔ¤²â½á¹ûy
-	y = mnist_forward.forward(x, REGULARIZER)
-	#µ±Ç°¼ÆËãÂÖÊı¼ÆÊıÆ÷¸³Öµ£¬Éè¶¨Îª²»¿ÉÑµÁ·ÀàĞÍ
+    #è°ƒç”¨mnist_forwardæ–‡ä»¶ä¸­çš„å‰å‘ä¼ æ’­è¿‡ç¨‹forword()å‡½æ•°ï¼Œå¹¶è®¾ç½®æ­£åˆ™åŒ–ï¼Œè®¡ç®—è®­ç»ƒæ•°æ®é›†ä¸Šçš„é¢„æµ‹ç»“æœy
+    y = mnist_forward.forward(x, REGULARIZER)
+    #å½“å‰è®¡ç®—è½®æ•°è®¡æ•°å™¨èµ‹å€¼ï¼Œè®¾å®šä¸ºä¸å¯è®­ç»ƒç±»å‹
     global_step = tf.Variable(0, trainable=False)
 
-    #µ÷ÓÃ°üº¬ËùÓĞ²ÎÊıÕıÔò»¯ËğÊ§µÄËğÊ§º¯Êıloss
+    #è°ƒç”¨åŒ…å«æ‰€æœ‰å‚æ•°æ­£åˆ™åŒ–æŸå¤±çš„æŸå¤±å‡½æ•°loss
     ce = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
     cem = tf.reduce_mean(ce)
     loss = cem + tf.add_n(tf.get_collection('losses'))
-    #Éè¶¨Ö¸ÊıË¥¼õÑ§Ï°ÂÊlearning_rate
+    #è®¾å®šæŒ‡æ•°è¡°å‡å­¦ä¹ ç‡learning_rate
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,
         global_step,
-        mnist.train.num_examples / BATCH_SIZE, 
+        mnist.train.num_examples / BATCH_SIZE,
         LEARNING_RATE_DECAY,
         staircase=True)
 
-    #Ê¹ÓÃÌİ¶ÈË¥¼õËã·¨¶ÔÄ£ĞÍÓÅ»¯£¬½µµÍËğÊ§º¯Êı
+    #ä½¿ç”¨æ¢¯åº¦è¡°å‡ç®—æ³•å¯¹æ¨¡å‹ä¼˜åŒ–ï¼Œé™ä½æŸå¤±å‡½æ•°
     #train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
     train_step = tf.train.MomentumOptimizer(learning_rate,0.9).minimize(loss, global_step=global_step)
     #train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step=global_step)
-    #¶¨Òå²ÎÊıµÄ»¬¶¯Æ½¾ù
+    #å®šä¹‰å‚æ•°çš„æ»‘åŠ¨å¹³å‡
     ema = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
     ema_op = ema.apply(tf.trainable_variables())
-	#ÊµÀı»¯¿É»¹Ô­»¬¶¯Æ½¾ùµÄsaver 
-	#ÔÚÄ£ĞÍÑµÁ·Ê±ÒıÈë»¬¶¯Æ½¾ù¿ÉÒÔÊ¹Ä£ĞÍÔÚ²âÊÔÊı¾İÉÏ±íÏÖµÄ¸ü¼Ó½¡×³
+    #å®ä¾‹åŒ–å¯è¿˜åŸæ»‘åŠ¨å¹³å‡çš„saver
+    #åœ¨æ¨¡å‹è®­ç»ƒæ—¶å¼•å…¥æ»‘åŠ¨å¹³å‡å¯ä»¥ä½¿æ¨¡å‹åœ¨æµ‹è¯•æ•°æ®ä¸Šè¡¨ç°çš„æ›´åŠ å¥å£®
     with tf.control_dependencies([train_step,ema_op]):
         train_op = tf.no_op(name='train')
 
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-		#ËùÓĞ²ÎÊı³õÊ¼»¯
+        #æ‰€æœ‰å‚æ•°åˆå§‹åŒ–
         init_op = tf.global_variables_initializer()
         sess.run(init_op)
-        #Ã¿´ÎÎ¹Èëbatch_size×é£¨¼´200×é£©ÑµÁ·Êı¾İºÍ¶ÔÓ¦±êÇ©£¬Ñ­»·µü´ústepsÂÖ
+
+        #æ¯æ¬¡å–‚å…¥batch_sizeç»„ï¼ˆå³200ç»„ï¼‰è®­ç»ƒæ•°æ®å’Œå¯¹åº”æ ‡ç­¾ï¼Œå¾ªç¯è¿­ä»£stepsè½®
         for i in range(STEPS):
             xs, ys = mnist.train.next_batch(BATCH_SIZE)
             _, loss_value, step = sess.run([train_op, loss, global_step], feed_dict={x: xs, y_: ys})
             if i % 1000 == 0:
                 print("After %d training step(s), loss on training batch is %g." % (step, loss_value))
-				#½«µ±Ç°»á»°¼ÓÔØµ½Ö¸¶¨Â·¾¶
+                #å°†å½“å‰ä¼šè¯åŠ è½½åˆ°æŒ‡å®šè·¯å¾„
                 saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step=global_step)
 
 
 def main():
-	#¶ÁÈëmnist
+    #è¯»å…¥mnist
     mnist = input_data.read_data_sets("./data/", one_hot=True)
-    #·´Ïò´«²¥
-	backward(mnist)
+    #åå‘ä¼ æ’­
+    backward(mnist)
 
 if __name__ == '__main__':
     main()
-
-

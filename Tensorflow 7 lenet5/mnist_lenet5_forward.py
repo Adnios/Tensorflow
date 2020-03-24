@@ -1,73 +1,78 @@
-#coding:utf-8
 import tensorflow as tf
-#Ã¿ÕÅÍ¼Æ¬·Ö±æÂÊÎª28*28
+
+# æ¯å¼ å›¾ç‰‡åˆ†è¾¨ç‡ä¸º28*28
 IMAGE_SIZE = 28
-#MnistÊı¾İ¼¯Îª»Ò¶ÈÍ¼£¬¹ÊÊäÈëÍ¼Æ¬Í¨µÀÊıNUM_CHANNELSÈ¡ÖµÎª1
+# Mnistæ•°æ®é›†ä¸ºç°åº¦å›¾ï¼Œæ•…è¾“å…¥å›¾ç‰‡é€šé“æ•°NUM_CHANNELSå–å€¼ä¸º1
 NUM_CHANNELS = 1
-#µÚÒ»²ã¾í»ıºË´óĞ¡Îª5
+# ç¬¬ä¸€å±‚å·ç§¯æ ¸å¤§å°ä¸º5
 CONV1_SIZE = 5
-#¾í»ıºË¸öÊıÎª32
+# å·ç§¯æ ¸ä¸ªæ•°ä¸º32
 CONV1_KERNEL_NUM = 32
-#µÚ¶ş²ã¾í»ıºË´óĞ¡Îª5
+# ç¬¬äºŒå±‚å·ç§¯æ ¸å¤§å°ä¸º5
 CONV2_SIZE = 5
-#¾í»ıºË¸öÊıÎª64
+# å·ç§¯æ ¸ä¸ªæ•°ä¸º64
 CONV2_KERNEL_NUM = 64
-#È«Á¬½Ó²ãµÚÒ»²ãÎª 512 ¸öÉñ¾­Ôª
+# å…¨è¿æ¥å±‚ç¬¬ä¸€å±‚ä¸º 512 ä¸ªç¥ç»å…ƒ
 FC_SIZE = 512
-#È«Á¬½Ó²ãµÚ¶ş²ãÎª 10 ¸öÉñ¾­Ôª
+# å…¨è¿æ¥å±‚ç¬¬äºŒå±‚ä¸º 10 ä¸ªç¥ç»å…ƒ
 OUTPUT_NODE = 10
 
-#È¨ÖØw¼ÆËã
+
+# æƒé‡wè®¡ç®—
 def get_weight(shape, regularizer):
-	w = tf.Variable(tf.truncated_normal(shape,stddev=0.1))
-	if regularizer != None: tf.add_to_collection('losses', tf.contrib.layers.l2_regularizer(regularizer)(w)) 
-	return w
+    w = tf.Variable(tf.truncated_normal(shape, stddev=0.1))
+    if regularizer != None: tf.add_to_collection('losses', tf.contrib.layers.l2_regularizer(regularizer)(w))
+    return w
 
-#Æ«ÖÃb¼ÆËã
-def get_bias(shape): 
-	b = tf.Variable(tf.zeros(shape))  
-	return b
 
-#¾í»ı²ã¼ÆËã
-def conv2d(x,w):  
-	return tf.nn.conv2d(x, w, strides=[1, 1, 1, 1], padding='SAME')
+# åç½®bè®¡ç®—
+def get_bias(shape):
+    b = tf.Variable(tf.zeros(shape))
+    return b
 
-#×î´ó³Ø»¯²ã¼ÆËã
-def max_pool_2x2(x):  
-	return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME') 
+
+# å·ç§¯å±‚è®¡ç®—
+def conv2d(x, w):
+    return tf.nn.conv2d(x, w, strides=[1, 1, 1, 1], padding='SAME')
+
+
+# æœ€å¤§æ± åŒ–å±‚è®¡ç®—
+def max_pool_2x2(x):
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
 
 def forward(x, train, regularizer):
-	#ÊµÏÖµÚÒ»²ã¾í»ı
-    conv1_w = get_weight([CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_KERNEL_NUM], regularizer) 
-    conv1_b = get_bias([CONV1_KERNEL_NUM]) 
-    conv1 = conv2d(x, conv1_w) 
-	#·ÇÏßĞÔ¼¤»î
-    relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_b)) 
-	#×î´ó³Ø»¯
-    pool1 = max_pool_2x2(relu1) 
+    # å®ç°ç¬¬ä¸€å±‚å·ç§¯
+    conv1_w = get_weight([CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_KERNEL_NUM], regularizer)
+    conv1_b = get_bias([CONV1_KERNEL_NUM])
+    conv1 = conv2d(x, conv1_w)
+    # éçº¿æ€§æ¿€æ´»
+    relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_b))
+    # æœ€å¤§æ± åŒ–
+    pool1 = max_pool_2x2(relu1)
 
-    #ÊµÏÖµÚ¶ş²ã¾í»ı
-    conv2_w = get_weight([CONV2_SIZE, CONV2_SIZE, CONV1_KERNEL_NUM, CONV2_KERNEL_NUM],regularizer) 
+    # å®ç°ç¬¬äºŒå±‚å·ç§¯
+    conv2_w = get_weight([CONV2_SIZE, CONV2_SIZE, CONV1_KERNEL_NUM, CONV2_KERNEL_NUM], regularizer)
     conv2_b = get_bias([CONV2_KERNEL_NUM])
-    conv2 = conv2d(pool1, conv2_w) 
+    conv2 = conv2d(pool1, conv2_w)
     relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_b))
     pool2 = max_pool_2x2(relu2)
-     
-	#»ñÈ¡Ò»¸öÕÅÁ¿µÄÎ¬¶È
-    pool_shape = pool2.get_shape().as_list() 
-	#pool_shape[1] Îª³¤ pool_shape[2] Îª¿í pool_shape[3]Îª¸ß
-    nodes = pool_shape[1] * pool_shape[2] * pool_shape[3] 
-	#µÃµ½¾ØÕó±»À­³¤ºóµÄ³¤¶È£¬pool_shape[0]ÎªbatchÖµ
-    reshaped = tf.reshape(pool2, [pool_shape[0], nodes]) 
 
-    #ÊµÏÖµÚÈı²ãÈ«Á¬½Ó²ã
-    fc1_w = get_weight([nodes, FC_SIZE], regularizer) 
-    fc1_b = get_bias([FC_SIZE]) 
-    fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_w) + fc1_b) 
-	#Èç¹ûÊÇÑµÁ·½×¶Î£¬Ôò¶Ô¸Ã²ãÊä³öÊ¹ÓÃdropout
+    # è·å–ä¸€ä¸ªå¼ é‡çš„ç»´åº¦
+    pool_shape = pool2.get_shape().as_list()
+    # pool_shape[1] ä¸ºé•¿ pool_shape[2] ä¸ºå®½ pool_shape[3]ä¸ºé«˜
+    nodes = pool_shape[1] * pool_shape[2] * pool_shape[3]
+    # å¾—åˆ°çŸ©é˜µè¢«æ‹‰é•¿åçš„é•¿åº¦ï¼Œpool_shape[0]ä¸ºbatchå€¼
+    reshaped = tf.reshape(pool2, [pool_shape[0], nodes])
+
+    # å®ç°ç¬¬ä¸‰å±‚å…¨è¿æ¥å±‚
+    fc1_w = get_weight([nodes, FC_SIZE], regularizer)
+    fc1_b = get_bias([FC_SIZE])
+    fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_w) + fc1_b)
+    # å¦‚æœæ˜¯è®­ç»ƒé˜¶æ®µï¼Œåˆ™å¯¹è¯¥å±‚è¾“å‡ºä½¿ç”¨dropout
     if train: fc1 = tf.nn.dropout(fc1, 0.5)
 
-    #ÊµÏÖµÚËÄ²ãÈ«Á¬½Ó²ã
+    # å®ç°ç¬¬å››å±‚å…¨è¿æ¥å±‚
     fc2_w = get_weight([FC_SIZE, OUTPUT_NODE], regularizer)
     fc2_b = get_bias([OUTPUT_NODE])
     y = tf.matmul(fc1, fc2_w) + fc2_b
